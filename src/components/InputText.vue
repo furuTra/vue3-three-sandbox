@@ -1,7 +1,13 @@
 <template>
   <div>
-    <input type="text" placeholder="edit here" v-model="inputText.msg" />
-    <input type="text" placeholder="edit here" v-model="inputText.color" />
+    <form>
+      <label for="text">吹き出しのメッセージ：</label>
+      <input type="text" placeholder="edit here" v-model="inputText.msg" />
+    </form>
+    <form>
+      <label for="color">吹き出しの色：</label>
+      <input type="color" placeholder="edit here" v-model="inputText.color" />
+    </form>
   </div>
   <div ref="container" style="width: 589px; height: 589px"></div>
 </template>
@@ -12,8 +18,8 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, h } from "vue";
 
 interface Message {
-  msg: String
-  color: String
+  msg: String;
+  color: String;
 }
 
 export default defineComponent({
@@ -30,8 +36,8 @@ export default defineComponent({
   setup(props) {
     const inputText = reactive<Message>({
       msg: props.msg,
-      color: props.color
-    })
+      color: props.color,
+    });
 
     const container = ref(null);
 
