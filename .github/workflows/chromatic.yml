@@ -19,6 +19,8 @@ jobs:
         node-version: [ 16.x ]
     # Job steps
     steps:
+      - run: |
+          echo "ths is env=${{ secrets.CHROMATIC_PROJECT_TOKEN }}"
       - uses: actions/checkout@v1
       - run: npm ci
         #👇 Adds Chromatic as a step in the workflow
