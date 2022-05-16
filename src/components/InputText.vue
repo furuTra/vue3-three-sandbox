@@ -1,13 +1,13 @@
 <template>
   <div>
-    <form>
+    <p>
       <label for="text">吹き出しのメッセージ：</label>
       <input type="text" placeholder="edit here" v-model="inputText.msg" />
-    </form>
-    <form>
+    </p>
+    <p>
       <label for="color">吹き出しの色：</label>
       <input type="color" placeholder="edit here" v-model="inputText.color" />
-    </form>
+    </p>
   </div>
   <div ref="container" style="width: 589px; height: 589px"></div>
 </template>
@@ -36,7 +36,7 @@ export default defineComponent({
   setup(props) {
     const inputText = reactive<Message>({
       msg: props.msg,
-      color: props.color,
+      color: '#' + new THREE.Color(props.color).getHexString(),
     });
 
     const container = ref(null);
@@ -62,13 +62,13 @@ export default defineComponent({
       ctx.quadraticCurveTo(25, 25, 25, 62.5 * 2);
       // 吹き出し左下
       ctx.quadraticCurveTo(25, 100 * 2, 50 * 2, 100 * 2);
-      // 吹き出し下
-      ctx.quadraticCurveTo(50 * 2, 120 * 2, 30 * 2, 125 * 2);
-      ctx.quadraticCurveTo(60 * 2, 120 * 2, 65 * 2, 100 * 2);
       // 吹き出し右下
       ctx.quadraticCurveTo(125 * 2, 100 * 2, 125 * 2, 62.5 * 2);
       // 吹き出し右上
       ctx.quadraticCurveTo(125 * 2, 25, 75 * 2, 25);
+      // 吹き出し下
+      ctx.quadraticCurveTo(50 * 2, 120 * 2, 30 * 2, 125 * 2);
+      ctx.quadraticCurveTo(60 * 2, 120 * 2, 65 * 2, 100 * 2);
       ctx.fillStyle = color;
       ctx.fill();
     };
@@ -76,6 +76,7 @@ export default defineComponent({
     const drawMsg = (msg) => {
       ctx.fillStyle = "black";
       ctx.font = "30px 'Arial'";
+      ctx.textAlign = "center";
       ctx.fillText(msg, ctx.canvas.width / 2, ctx.canvas.height / 2);
     };
 
