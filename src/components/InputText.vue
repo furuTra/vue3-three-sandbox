@@ -9,6 +9,7 @@
       <input type="color" placeholder="edit here" v-model="inputText.color" />
     </p>
   </div>
+  <!-- <div ref="container" class="container"></div> -->
   <div ref="container" style="width: 589px; height: 589px"></div>
 </template>
 
@@ -36,7 +37,7 @@ export default defineComponent({
   setup(props) {
     const inputText = reactive<Message>({
       msg: props.msg,
-      color: '#' + new THREE.Color(props.color).getHexString(),
+      color: "#" + new THREE.Color(props.color).getHexString(),
     });
 
     const container = ref(null);
@@ -51,6 +52,25 @@ export default defineComponent({
     let planeMesh;
 
     const ctx = document.createElement("canvas").getContext("2d");
+
+    let clientWidth, clientHeight, mouseX, mouseY;
+    let objs = [];
+    let INTERSECTED;
+    const mouseOver = () => {
+      renderer.domElement.addEventListener("mousemove", (e) => {
+        // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
+        mouseX = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
+        mouseY = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
+        var pos = new THREE.Vector3(mouseX, mouseY, 1);
+        pos.unproject(camera);
+        var ray = new THREE.Raycaster(
+          camera.position,
+          pos.sub(camera.position).normalize()
+        );
+        // mousehover位置にあるオブジェクトを取得
+        objs = ray.intersectObjects(scene.children);
+      });
+    };
 
     const drawBubble = (color) => {
       ctx.canvas.width = 256;
@@ -75,7 +95,7 @@ export default defineComponent({
 
     const drawMsg = (msg) => {
       ctx.fillStyle = "black";
-      ctx.font = "30px 'Arial'";
+      ctx.font = "20px 'Arial'";
       ctx.textAlign = "center";
       ctx.fillText(msg, ctx.canvas.width / 2, ctx.canvas.height / 2);
     };
@@ -84,7 +104,9 @@ export default defineComponent({
       if (container.value instanceof HTMLElement) {
         spotLight.position.set(7, 5, 5);
 
-        const { clientWidth, clientHeight } = container.value;
+        clientWidth = container.value.clientWidth;
+        clientHeight = container.value.clientHeight;
+
         camera.aspect = clientWidth / clientHeight;
         camera.updateProjectionMatrix();
         camera.position.set(0, 10, 10);
@@ -94,6 +116,7 @@ export default defineComponent({
         scene.add(grid);
         scene.add(axes);
 
+        mouseOver();
         drawBubble(inputText.color);
         drawMsg(inputText.msg);
 
@@ -124,6 +147,14 @@ export default defineComponent({
         controls.update();
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
+
+        // mouseoverしたオブジェクトがMeshであれば、回転表示する
+        if (objs.length > 0 && objs[0].object.type == "Mesh") {
+          if (INTERSECTED != objs[0].object) {
+            INTERSECTED = objs[0].object;
+          }
+          INTERSECTED.rotation.y += 0.02;
+        }
       };
       frame();
     };
@@ -140,3 +171,10 @@ export default defineComponent({
   },
 });
 </script>
+
+<style scoped>
+.container {
+  width: 80%;
+  height: 80%;
+}
+</style>
