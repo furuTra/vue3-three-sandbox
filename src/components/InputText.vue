@@ -122,9 +122,11 @@ export default defineComponent({
 
         const planeGeometry = new THREE.PlaneGeometry(5, 5);
         const planeTexture = new THREE.CanvasTexture(ctx.canvas);
-        const planeMaterial = new THREE.MeshBasicMaterial({
+        const planeMaterial = new THREE.MeshStandardMaterial({
           map: planeTexture,
           transparent: true,
+          emissiveIntensity: 0.3,
+          flatShading: true,
           side: THREE.DoubleSide,
         });
         planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
@@ -139,6 +141,7 @@ export default defineComponent({
       }
     };
 
+    const hoverColor = 0xff0000;
     const animate = () => {
       const frame = () => {
         drawBubble(inputText.color);
@@ -148,12 +151,18 @@ export default defineComponent({
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
 
-        // mouseoverしたオブジェクトがMeshであれば、回転表示する
+        // mouseoverしたオブジェクトがMeshであれば、赤く表示する
         if (objs.length > 0 && objs[0].object.type == "Mesh") {
           if (INTERSECTED != objs[0].object) {
             INTERSECTED = objs[0].object;
+            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+            INTERSECTED.material.emissive.setHex(hoverColor);
           }
-          INTERSECTED.rotation.y += 0.02;
+        } else {
+          if (INTERSECTED) {
+            INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+          }
+          INTERSECTED = null;
         }
       };
       frame();
