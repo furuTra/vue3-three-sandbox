@@ -16,12 +16,15 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, h } from "vue";
+import { defineComponent, reactive, onMounted, ref, h, PropType } from "vue";
+import { Bubble, IBubble } from "@/libs/Bubble";
 
 interface Message {
   msg: String;
   color: String;
 }
+
+const hoverColor = 0xff0000;
 
 export default defineComponent({
   props: {
@@ -46,12 +49,18 @@ export default defineComponent({
     const camera = new THREE.PerspectiveCamera();
     const renderer = new THREE.WebGLRenderer();
     const controls = new OrbitControls(camera, renderer.domElement);
-    const grid = new THREE.GridHelper();
     const axes = new THREE.AxesHelper(10);
     const spotLight = new THREE.SpotLight(0xffffff);
-    let planeMesh;
 
-    const ctx = document.createElement("canvas").getContext("2d");
+    let bubbles = [];
+
+    let bubble = new Bubble({
+      msg: inputText.msg,
+      color: inputText.color,
+      posX: 0,
+      posY: 0,
+      posZ: 0,
+    });
 
     let clientWidth, clientHeight, mouseX, mouseY;
     let objs = [];
@@ -72,34 +81,6 @@ export default defineComponent({
       });
     };
 
-    const drawBubble = (color) => {
-      ctx.canvas.width = 256;
-      ctx.canvas.height = 256;
-      ctx.clearRect(0, 0, 256, 256);
-      ctx.beginPath();
-      ctx.moveTo(75 * 2, 25);
-      // 吹き出し左上
-      ctx.quadraticCurveTo(25, 25, 25, 62.5 * 2);
-      // 吹き出し左下
-      ctx.quadraticCurveTo(25, 100 * 2, 50 * 2, 100 * 2);
-      // 吹き出し右下
-      ctx.quadraticCurveTo(125 * 2, 100 * 2, 125 * 2, 62.5 * 2);
-      // 吹き出し右上
-      ctx.quadraticCurveTo(125 * 2, 25, 75 * 2, 25);
-      // 吹き出し下
-      ctx.quadraticCurveTo(50 * 2, 120 * 2, 30 * 2, 125 * 2);
-      ctx.quadraticCurveTo(60 * 2, 120 * 2, 65 * 2, 100 * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-    };
-
-    const drawMsg = (msg) => {
-      ctx.fillStyle = "black";
-      ctx.font = "20px 'Arial'";
-      ctx.textAlign = "center";
-      ctx.fillText(msg, ctx.canvas.width / 2, ctx.canvas.height / 2);
-    };
-
     const init = () => {
       if (container.value instanceof HTMLElement) {
         spotLight.position.set(7, 5, 5);
@@ -113,24 +94,15 @@ export default defineComponent({
         camera.lookAt(0, 0, 0);
 
         scene.add(spotLight);
-        scene.add(grid);
         scene.add(axes);
 
         mouseOver();
-        drawBubble(inputText.color);
-        drawMsg(inputText.msg);
 
-        const planeGeometry = new THREE.PlaneGeometry(5, 5);
-        const planeTexture = new THREE.CanvasTexture(ctx.canvas);
-        const planeMaterial = new THREE.MeshStandardMaterial({
-          map: planeTexture,
-          transparent: true,
-          emissiveIntensity: 0.3,
-          flatShading: true,
-          side: THREE.DoubleSide,
-        });
-        planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
-        scene.add(planeMesh);
+        bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
+        bubble.createPlane(bubble.ctx);
+        bubble.plane.position.set(bubble.posX, bubble.posY, bubble.posZ);
+        bubble.plane.rotation.y = Math.PI / 18;
+        scene.add(bubble.plane);
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
         renderer.setSize(clientWidth, clientWidth);
@@ -141,12 +113,10 @@ export default defineComponent({
       }
     };
 
-    const hoverColor = 0xff0000;
     const animate = () => {
       const frame = () => {
-        drawBubble(inputText.color);
-        drawMsg(inputText.msg);
-        planeMesh.material.map.needsUpdate = true;
+        bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
+        bubble.plane.material.map.needsUpdate = true;
         controls.update();
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
