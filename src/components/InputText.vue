@@ -17,7 +17,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, h, PropType } from "vue";
-import { Bubble, IBubble } from "@/libs/Bubble";
+import { Bubble } from "@/libs/Bubble";
 
 interface Message {
   msg: String;
@@ -64,7 +64,6 @@ export default defineComponent({
 
     let clientWidth, clientHeight, mouseX, mouseY;
     let objs = [];
-    let INTERSECTED;
     const mouseOver = () => {
       renderer.domElement.addEventListener("mousemove", (e) => {
         // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
@@ -113,6 +112,23 @@ export default defineComponent({
       }
     };
 
+    let INTERSECTED;
+    const objectEmissive = (objs) => {
+      // mouseoverしたオブジェクトがMeshであれば、赤く表示する
+      if (objs.length > 0 && objs[0].object.type == "Mesh") {
+        if (INTERSECTED != objs[0].object) {
+          INTERSECTED = objs[0].object;
+          INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+          INTERSECTED.material.emissive.setHex(hoverColor);
+        }
+      } else {
+        if (INTERSECTED) {
+          INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+        }
+        INTERSECTED = null;
+      }
+    };
+
     const animate = () => {
       const frame = () => {
         bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
@@ -120,20 +136,7 @@ export default defineComponent({
         controls.update();
         renderer.render(scene, camera);
         requestAnimationFrame(frame);
-
-        // mouseoverしたオブジェクトがMeshであれば、赤く表示する
-        if (objs.length > 0 && objs[0].object.type == "Mesh") {
-          if (INTERSECTED != objs[0].object) {
-            INTERSECTED = objs[0].object;
-            INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
-            INTERSECTED.material.emissive.setHex(hoverColor);
-          }
-        } else {
-          if (INTERSECTED) {
-            INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-          }
-          INTERSECTED = null;
-        }
+        objectEmissive(objs);
       };
       frame();
     };
