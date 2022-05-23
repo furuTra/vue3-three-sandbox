@@ -17,7 +17,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, h, PropType } from "vue";
-import { Bubble } from "@/libs/Bubble";
+import { Bubble } from "../libs/Bubble";
 
 interface Message {
   msg: String;
