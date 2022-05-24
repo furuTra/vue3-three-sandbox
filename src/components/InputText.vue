@@ -20,8 +20,8 @@ import { defineComponent, reactive, onMounted, ref, h, PropType } from "vue";
 import { Bubble } from "../libs/Bubble";
 
 interface Message {
-  msg: String;
-  color: String;
+  msg: string;
+  color: string;
 }
 
 const hoverColor = 0xff0000;
@@ -52,32 +52,19 @@ export default defineComponent({
     const axes = new THREE.AxesHelper(10);
     const spotLight = new THREE.SpotLight(0xffffff);
 
-    let bubbles = [];
-
     let bubble = new Bubble({
       msg: inputText.msg,
       color: inputText.color,
-      posX: 0,
-      posY: 0,
-      posZ: 0,
+      rotY: Math.PI / 18,
     });
 
-    let clientWidth, clientHeight, mouseX, mouseY;
-    let objs = [];
-    const mouseOver = () => {
-      renderer.domElement.addEventListener("mousemove", (e) => {
-        // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
-        mouseX = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
-        mouseY = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
-        var pos = new THREE.Vector3(mouseX, mouseY, 1);
-        pos.unproject(camera);
-        var ray = new THREE.Raycaster(
-          camera.position,
-          pos.sub(camera.position).normalize()
-        );
-        // mousehover位置にあるオブジェクトを取得
-        objs = ray.intersectObjects(scene.children);
-      });
+    let clientWidth, clientHeight;
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2(1, 1);
+    const onPointerMove = (e) => {
+      // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
+      mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
+      mouse.y = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
     };
 
     const init = () => {
@@ -95,12 +82,7 @@ export default defineComponent({
         scene.add(spotLight);
         scene.add(axes);
 
-        mouseOver();
-
         bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
-        bubble.createPlane(bubble.ctx);
-        bubble.plane.position.set(bubble.posX, bubble.posY, bubble.posZ);
-        bubble.plane.rotation.y = Math.PI / 18;
         scene.add(bubble.plane);
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
@@ -109,6 +91,7 @@ export default defineComponent({
         renderer.shadowMap.enabled = true;
 
         container.value.appendChild(renderer.domElement);
+        renderer.domElement.addEventListener("mousemove", onPointerMove);
       }
     };
 
@@ -117,14 +100,15 @@ export default defineComponent({
       // mouseoverしたオブジェクトがMeshであれば、赤く表示する
       if (objs.length > 0 && objs[0].object.type == "Mesh") {
         if (INTERSECTED != objs[0].object) {
+          if (INTERSECTED)
+            INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
           INTERSECTED = objs[0].object;
           INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
           INTERSECTED.material.emissive.setHex(hoverColor);
         }
       } else {
-        if (INTERSECTED) {
+        if (INTERSECTED)
           INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
-        }
         INTERSECTED = null;
       }
     };
@@ -133,8 +117,12 @@ export default defineComponent({
       const frame = () => {
         bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
         bubble.plane.material.map.needsUpdate = true;
+
         controls.update();
         renderer.render(scene, camera);
+        raycaster.setFromCamera(mouse, camera);
+        // mousehover位置にあるオブジェクトを取得
+        let objs = raycaster.intersectObjects(scene.children);
         requestAnimationFrame(frame);
         objectEmissive(objs);
       };
