@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 export interface IBubble {
+    uuid: string | undefined;
     msg: string | undefined;
     color: string | undefined;
     ctx: CanvasRenderingContext2D | null;
@@ -12,9 +13,10 @@ export interface IBubble {
   }
 
 export class Bubble implements IBubble {
+    uuid: string = "";
     msg: string = "";
     color: string = "white";
-    ctx: CanvasRenderingContext2D | null;
+    ctx: CanvasRenderingContext2D | null = document.createElement("canvas").getContext("2d");
     plane: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> | undefined;
     posX: number = 0;
     posY: number = 0;
@@ -23,8 +25,8 @@ export class Bubble implements IBubble {
 
     constructor(init?: Partial<Bubble>) {
       Object.assign(this, init);
-      this.ctx = document.createElement("canvas").getContext("2d");
       this.plane = this.createPlane(this.ctx);
+      this.uuid = this.plane.uuid;
       this.plane.position.set(this.posX, this.posY, this.posZ);
       this.plane.rotation.y = this.rotY;
     }
