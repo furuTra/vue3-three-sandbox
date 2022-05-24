@@ -16,7 +16,12 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, h, PropType } from "vue";
+import {
+  defineComponent,
+  reactive,
+  onMounted,
+  ref,
+} from "vue";
 import { Bubble } from "../libs/Bubble";
 
 interface Message {
@@ -52,11 +57,27 @@ export default defineComponent({
     const axes = new THREE.AxesHelper(10);
     const spotLight = new THREE.SpotLight(0xffffff);
 
-    let bubble = new Bubble({
-      msg: inputText.msg,
-      color: inputText.color,
-      rotY: Math.PI / 18,
-    });
+    let bubbles = [
+      new Bubble({
+        msg: "hello!!",
+        color: "pink",
+        rotY: Math.PI / 18,
+      }),
+      new Bubble({
+        msg: "sample!!",
+        color: "skyblue",
+        posX: 4,
+        posY: 1,
+        posZ: 1,
+      }),
+      new Bubble({
+        msg: "What!!",
+        color: "green",
+        posX: 2,
+        posY: 5,
+        posZ: 0,
+      }),
+    ];
 
     let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
@@ -65,6 +86,18 @@ export default defineComponent({
       // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
       mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
       mouse.y = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
+    };
+
+    let selectBubble;
+    const onPointerDown = (e) => {
+      if (INTERSECTED) {
+        selectBubble = bubbles.find(
+          (bubble) => bubble.uuid == INTERSECTED.uuid
+        );
+        inputText.msg = selectBubble.msg;
+        inputText.color =
+          "#" + new THREE.Color(selectBubble.color).getHexString();
+      }
     };
 
     const init = () => {
@@ -82,8 +115,10 @@ export default defineComponent({
         scene.add(spotLight);
         scene.add(axes);
 
-        bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
-        scene.add(bubble.plane);
+        bubbles.forEach((bubble) => {
+          bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
+          scene.add(bubble.plane);
+        });
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
         renderer.setSize(clientWidth, clientWidth);
@@ -92,6 +127,7 @@ export default defineComponent({
 
         container.value.appendChild(renderer.domElement);
         renderer.domElement.addEventListener("mousemove", onPointerMove);
+        renderer.domElement.addEventListener("mousedown", onPointerDown);
       }
     };
 
@@ -115,8 +151,16 @@ export default defineComponent({
 
     const animate = () => {
       const frame = () => {
-        bubble.createBubble(inputText.color, inputText.msg, bubble.ctx);
-        bubble.plane.material.map.needsUpdate = true;
+        if (selectBubble) {
+          selectBubble.createBubble(
+            inputText.color,
+            inputText.msg,
+            selectBubble.ctx
+          );
+          selectBubble.color = inputText.color;
+          selectBubble.msg = inputText.msg;
+          selectBubble.plane.material.map.needsUpdate = true;
+        }
 
         controls.update();
         renderer.render(scene, camera);
