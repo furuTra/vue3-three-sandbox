@@ -1,33 +1,38 @@
 import * as THREE from "three";
 
 export interface IBubble {
-    msg: string;
-    color: string;
+    uuid: string | undefined;
+    msg: string | undefined;
+    color: string | undefined;
     ctx: CanvasRenderingContext2D | null;
-    plane: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
-    posX: number;
-    posY: number;
-    posZ: number;
-    rotY: number;
+    plane: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> | undefined;
+    posX: number | undefined;
+    posY: number | undefined;
+    posZ: number | undefined;
+    rotY: number | undefined;
   }
 
 export class Bubble implements IBubble {
+    uuid: string = "";
+    msg: string = "";
+    color: string = "white";
+    ctx: CanvasRenderingContext2D | null = document.createElement("canvas").getContext("2d");
+    plane: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> | undefined;
+    posX: number = 0;
+    posY: number = 0;
+    posZ: number = 0;
+    rotY: number = 0;
+
     constructor(init?: Partial<Bubble>) {
       Object.assign(this, init);
-      this.ctx = document.createElement("canvas").getContext("2d");
+      this.plane = this.createPlane(this.ctx);
+      this.uuid = this.plane.uuid;
+      this.plane.position.set(this.posX, this.posY, this.posZ);
+      this.plane.rotation.y = this.rotY;
     }
 
-    msg: string;
-    color: string;
-    ctx: CanvasRenderingContext2D | null;
-    plane: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
-    posX: number;
-    posY: number;
-    posZ: number;
-    rotY: number;
-
-    createBubble(color: string, msg: string, ctx: CanvasRenderingContext2D) {
-      function drawBubble(color: string) {
+    createBubble(color: string, msg: string, ctx: CanvasRenderingContext2D): void {
+      function drawBubble(color: string): void {
         ctx.canvas.width = 256;
         ctx.canvas.height = 256;
         ctx.clearRect(0, 0, 256, 256);
@@ -48,7 +53,7 @@ export class Bubble implements IBubble {
         ctx.fill();
       }
 
-      function drawMsg(msg: string) {
+      function drawMsg(msg: string): void {
         ctx.fillStyle = "black";
         ctx.font = "20px 'Arial'";
         ctx.textAlign = "center";
@@ -60,10 +65,10 @@ export class Bubble implements IBubble {
       this.ctx = ctx;
     }
 
-    createPlane(ctx: CanvasRenderingContext2D) {
-      const planeGeometry = new THREE.PlaneGeometry(5, 5);
-      const planeTexture = new THREE.CanvasTexture(ctx.canvas);
-      const planeMaterial = new THREE.MeshStandardMaterial({
+    createPlane(ctx: CanvasRenderingContext2D) :THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial> {
+      let planeGeometry = new THREE.PlaneGeometry(5, 5);
+      let planeTexture = new THREE.CanvasTexture(ctx.canvas);
+      let planeMaterial = new THREE.MeshStandardMaterial({
         map: planeTexture,
         transparent: true,
         emissive: 0xc2c2c2,
@@ -71,6 +76,6 @@ export class Bubble implements IBubble {
         flatShading: true,
         side: THREE.DoubleSide,
       });
-      this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
+      return new THREE.Mesh(planeGeometry, planeMaterial);
     }
   }
