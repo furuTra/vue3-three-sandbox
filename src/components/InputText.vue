@@ -8,6 +8,7 @@
       <label for="color">吹き出しの色：</label>
       <input type="color" placeholder="edit here" v-model="inputText.color" />
     </p>
+    <button @click="pushButton">ADD</button>
   </div>
   <!-- <div ref="container" class="container"></div> -->
   <div ref="container" style="width: 589px; height: 589px"></div>
@@ -16,17 +17,16 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import {
-  defineComponent,
-  reactive,
-  onMounted,
-  ref,
-} from "vue";
+import { defineComponent, reactive, onMounted, ref, computed } from "vue";
 import { Bubble } from "../libs/Bubble";
 
 interface Message {
   msg: string;
   color: string;
+}
+
+interface Button {
+  isAdd: boolean;
 }
 
 const hoverColor = 0xff0000;
@@ -47,6 +47,13 @@ export default defineComponent({
       msg: props.msg,
       color: "#" + new THREE.Color(props.color).getHexString(),
     });
+    const button = reactive<Button>({
+      isAdd: false,
+    });
+
+    const pushButton = () => {
+      button.isAdd = !button.isAdd;
+    };
 
     const container = ref(null);
 
@@ -55,7 +62,7 @@ export default defineComponent({
     const renderer = new THREE.WebGLRenderer();
     const controls = new OrbitControls(camera, renderer.domElement);
     const axes = new THREE.AxesHelper(10);
-    const spotLight = new THREE.SpotLight(0xffffff);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 
     let bubbles = [
       new Bubble({
@@ -81,7 +88,7 @@ export default defineComponent({
 
     let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2(1, 1);
+    const mouse = new THREE.Vector2();
     const onPointerMove = (e) => {
       // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
       mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
@@ -97,13 +104,34 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
+      } else {
+        if (button.isAdd) {
+          let point = getWorldPoint();
+          let bubble = new Bubble({
+            msg: "input text",
+            color: "white",
+            posX: point.x,
+            posY: point.y,
+            posZ: point.z,
+          });
+          bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
+          bubbles.push(bubble);
+          scene.add(bubble.plane);
+        }
       }
+    };
+
+    const getWorldPoint = () => {
+      let worldPoint = new THREE.Vector3();
+      worldPoint.x = mouse.x - 1;
+      worldPoint.y = mouse.y + 1;
+      worldPoint.z = 0;
+      worldPoint.unproject(camera);
+      return worldPoint;
     };
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
-        spotLight.position.set(7, 5, 5);
-
         clientWidth = container.value.clientWidth;
         clientHeight = container.value.clientHeight;
 
@@ -112,7 +140,7 @@ export default defineComponent({
         camera.position.set(0, 10, 10);
         camera.lookAt(0, 0, 0);
 
-        scene.add(spotLight);
+        scene.add(ambientLight);
         scene.add(axes);
 
         bubbles.forEach((bubble) => {
@@ -180,6 +208,8 @@ export default defineComponent({
 
     return {
       inputText,
+      pushButton,
+      button,
       container,
     };
   },
