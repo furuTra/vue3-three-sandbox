@@ -8,10 +8,11 @@
       <label for="color">吹き出しの色：</label>
       <input type="color" placeholder="edit here" v-model="inputText.color" />
     </p>
-    <button @click="pushButton">ADD</button>
   </div>
-  <!-- <div ref="container" class="container"></div> -->
-  <div ref="container" style="width: 589px; height: 589px"></div>
+  <div class="container">
+    <div ref="container" id="canvas"></div>
+    <MyButton id="button" @push-mybutton="pushButton"/>
+  </div>
 </template>
 
 <script lang="ts">
@@ -19,6 +20,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, computed } from "vue";
 import { Bubble } from "../libs/Bubble";
+import MyButton from "./MyButton.vue";
 
 interface Message {
   msg: string;
@@ -41,6 +43,10 @@ export default defineComponent({
       type: String,
       default: "hello",
     },
+  },
+  name: "InputText",
+  components: {
+    MyButton,
   },
   setup(props) {
     const inputText = reactive<Message>({
@@ -218,7 +224,17 @@ export default defineComponent({
 
 <style scoped>
 .container {
-  width: 80%;
-  height: 80%;
+  position: relative;
+  width: 589px;
+  height: 589px;
+}
+#canvas {
+  width: 100%;
+  height: 100%;
+}
+#button {
+  position: absolute;
+  top: 90%;
+  left: 90%;
 }
 </style>
