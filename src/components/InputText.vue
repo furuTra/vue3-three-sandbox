@@ -11,7 +11,7 @@
   </div>
   <div class="container">
     <div ref="container" id="canvas"></div>
-    <MyButton id="button" @push-mybutton="pushButton"/>
+    <MyButton id="button" @push-mybutton="pushButton" />
   </div>
 </template>
 
@@ -56,10 +56,6 @@ export default defineComponent({
     const button = reactive<Button>({
       isAdd: false,
     });
-
-    const pushButton = () => {
-      button.isAdd = !button.isAdd;
-    };
 
     const container = ref(null);
 
@@ -110,21 +106,26 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
-      } else {
-        if (button.isAdd) {
-          let point = getWorldPoint();
-          let bubble = new Bubble({
-            msg: "input text",
-            color: "white",
-            posX: point.x,
-            posY: point.y,
-            posZ: point.z,
-          });
-          bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
-          bubbles.push(bubble);
-          scene.add(bubble.plane);
-        }
       }
+    };
+
+    const pushButton = () => {
+      button.isAdd = !button.isAdd;
+      addBubble();
+    };
+
+    const addBubble = () => {
+      let point = getWorldPoint();
+      let bubble = new Bubble({
+        msg: "input text",
+        color: "white",
+        posX: point.x,
+        posY: point.y,
+        posZ: point.z,
+      });
+      bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
+      bubbles.push(bubble);
+      scene.add(bubble.plane);
     };
 
     const getWorldPoint = () => {
