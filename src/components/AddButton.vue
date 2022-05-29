@@ -1,5 +1,5 @@
 <template>
-  <span class="MyButton" @click="pushButton"></span>
+  <span class="AddButton" @click="pushButton"></span>
 </template>
 
 <script lang="ts">
@@ -16,14 +16,14 @@ export default defineComponent({
       default: false,
     },
   },
-  name: "MyButton",
+  name: "AddButton",
   setup(props, context) {
     const button = reactive<Button>({
       isAdd: props.isAdd,
     });
 
     const pushButton = () => {
-      context.emit('push-mybutton')
+      context.emit('push-addbutton')
     };
 
     return {
@@ -35,7 +35,7 @@ export default defineComponent({
 </script>
 
 <style scoped>
-.MyButton {
+.AddButton {
   box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.2);
   width: 55px;
   height: 55px;
@@ -46,7 +46,7 @@ export default defineComponent({
   z-index: 100;
 }
 
-.MyButton:after {
+.AddButton:after {
   content: '';
   position: absolute;
   top: 50%;
@@ -57,7 +57,7 @@ export default defineComponent({
   background: #808080;
 }
 
-.MyButton:before {
+.AddButton:before {
   content: '';
   position: absolute;
   top: 50%;
