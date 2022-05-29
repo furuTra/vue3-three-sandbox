@@ -1,17 +1,15 @@
 <template>
-  <div>
-    <p>
-      <label for="text">吹き出しのメッセージ：</label>
-      <input type="text" placeholder="edit here" v-model="inputText.msg" />
-    </p>
-    <p>
-      <label for="color">吹き出しの色：</label>
-      <input type="color" placeholder="edit here" v-model="inputText.color" />
-    </p>
-  </div>
   <div class="container">
     <div ref="container" id="canvas"></div>
-    <MyButton id="button" @push-mybutton="pushButton" />
+    <div class="InputMsg" id="inputMessage">
+      <input type="color" placeholder="edit here" v-model="inputText.color" />
+      <input
+        type="text"
+        placeholder="message here..."
+        v-model="inputText.msg"
+      />
+    </div>
+    <AddButton id="button" @push-addbutton="pushButton" />
   </div>
 </template>
 
@@ -20,7 +18,8 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, computed } from "vue";
 import { Bubble } from "../libs/Bubble";
-import MyButton from "./MyButton.vue";
+import InputMessage from "./InputMessage.vue";
+import AddButton from "./AddButton.vue";
 
 interface Message {
   msg: string;
@@ -34,24 +33,15 @@ interface Button {
 const hoverColor = 0xff0000;
 
 export default defineComponent({
-  props: {
-    color: {
-      type: String,
-      default: "pink",
-    },
-    msg: {
-      type: String,
-      default: "hello",
-    },
-  },
   name: "InputText",
   components: {
-    MyButton,
+    InputMessage,
+    AddButton,
   },
-  setup(props) {
+  setup() {
     const inputText = reactive<Message>({
-      msg: props.msg,
-      color: "#" + new THREE.Color(props.color).getHexString(),
+      msg: "",
+      color: "#" + new THREE.Color("white").getHexString(),
     });
     const button = reactive<Button>({
       isAdd: false,
@@ -141,6 +131,8 @@ export default defineComponent({
       if (container.value instanceof HTMLElement) {
         clientWidth = container.value.clientWidth;
         clientHeight = container.value.clientHeight;
+        // clientWidth = window.innerWidth;
+        // clientHeight = window.innerHeight;
 
         camera.aspect = clientWidth / clientHeight;
         camera.updateProjectionMatrix();
@@ -237,5 +229,38 @@ export default defineComponent({
   position: absolute;
   top: 90%;
   left: 90%;
+}
+#inputMessage {
+  position: absolute;
+  top: 90%;
+  left: 30%;
+}
+
+.InputMsg {
+  box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  height: 55px;
+  z-index: 100;
+  transform: translate(-50%, -50%);
+  border-radius: 20px;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.InputMsg input[type="text"] {
+  font-size: 100%;
+  border: none;
+  outline: none;
+  box-sizing: content-box;
+  background-color: transparent;
+  background-clip: padding-box;
+  font-family: Arial, Helvetica, sans-serif;
+  cursor: pointer;
+}
+.InputMsg input[type="color"] {
+  margin-left: 5%;
+  border: none;
+  background: none;
+  height: 100%;
+  cursor: pointer;
 }
 </style>
