@@ -9,6 +9,12 @@
         v-model="inputText.msg"
       />
     </div>
+    <!-- <InputMessage
+      id="inputMessage"
+      :color="inputText.color"
+      :msg="inputText.msg"
+      @input="handleInput"
+    /> -->
     <AddButton id="button" @push-addbutton="pushButton" />
   </div>
 </template>
@@ -18,7 +24,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, computed } from "vue";
 import { Bubble } from "../libs/Bubble";
-import InputMessage from "./InputMessage.vue";
+// import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
 
 interface Message {
@@ -35,7 +41,7 @@ const hoverColor = 0xff0000;
 export default defineComponent({
   name: "InputText",
   components: {
-    InputMessage,
+    // InputMessage,
     AddButton,
   },
   setup() {
@@ -107,7 +113,7 @@ export default defineComponent({
     const addBubble = () => {
       let point = getWorldPoint();
       let bubble = new Bubble({
-        msg: "input text",
+        msg: "",
         color: "white",
         posX: point.x,
         posY: point.y,
@@ -218,6 +224,8 @@ export default defineComponent({
 <style scoped>
 .container {
   position: relative;
+  margin-left: auto;
+  margin-right: auto;
   width: 589px;
   height: 589px;
 }
