@@ -5,6 +5,8 @@
       id="inputMessage"
       v-bind:color="inputText.color"
       v-bind:msg="inputText.msg"
+      @input-msg="inputMsg"
+      @input-color="inputColor"
     />
     <AddButton id="button" @push-addbutton="pushButton" />
   </div>
@@ -13,7 +15,13 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, PropType, computed } from "vue";
+import {
+  defineComponent,
+  reactive,
+  onMounted,
+  ref,
+  PropType,
+} from "vue";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
@@ -124,6 +132,14 @@ export default defineComponent({
       }
     };
 
+    const inputMsg = (msg) => {
+      inputText.msg = msg;
+    };
+
+    const inputColor = (color) => {
+      inputText.color = color;
+    };
+
     const pushButton = () => {
       button.isAdd = !button.isAdd;
       addBubble();
@@ -232,6 +248,8 @@ export default defineComponent({
 
     return {
       inputText,
+      inputMsg,
+      inputColor,
       pushButton,
       button,
       container,

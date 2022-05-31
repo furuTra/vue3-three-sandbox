@@ -5,12 +5,14 @@
       name="color"
       placeholder="edit here"
       v-model="inputText.color"
+      @change="inputColor"
     />
     <input
       type="text"
       name="msg"
       placeholder="message here..."
       v-model="inputText.msg"
+      @change="inputMsg"
     />
   </div>
 </template>
@@ -45,8 +47,18 @@ export default defineComponent({
       inputText.msg = props.msg;
     });
 
+    const inputMsg = (e) => {
+      context.emit("input-msg", e.target.value);
+    };
+
+    const inputColor = (e) => {
+      context.emit("input-color", e.target.value);
+    };
+
     return {
       inputText,
+      inputMsg,
+      inputColor,
     };
   },
 });
