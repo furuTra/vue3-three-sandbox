@@ -1,20 +1,11 @@
 <template>
   <div class="container">
     <div ref="container" id="canvas"></div>
-    <div class="InputMsg" id="inputMessage">
-      <input type="color" placeholder="edit here" v-model="inputText.color" />
-      <input
-        type="text"
-        placeholder="message here..."
-        v-model="inputText.msg"
-      />
-    </div>
-    <!-- <InputMessage
+    <InputMessage
       id="inputMessage"
-      :color="inputText.color"
-      :msg="inputText.msg"
-      @input="handleInput"
-    /> -->
+      v-bind:color="inputText.color"
+      v-bind:msg="inputText.msg"
+    />
     <AddButton id="button" @push-addbutton="pushButton" />
   </div>
 </template>
@@ -22,9 +13,9 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, computed } from "vue";
-import { Bubble } from "../libs/Bubble";
-// import InputMessage from "./InputMessage.vue";
+import { defineComponent, reactive, onMounted, ref, PropType, computed } from "vue";
+import { Bubble, IBubble } from "../libs/Bubble";
+import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
 
 interface Message {
@@ -41,8 +32,34 @@ const hoverColor = 0xff0000;
 export default defineComponent({
   name: "InputText",
   components: {
-    // InputMessage,
+    InputMessage,
     AddButton,
+  },
+  props: {
+    bubbles: {
+      type: Array as PropType<IBubble[]>,
+      default: [
+        new Bubble({
+          msg: "hello!!",
+          color: "pink",
+          rotY: Math.PI / 18,
+        }),
+        new Bubble({
+          msg: "sample!!",
+          color: "skyblue",
+          posX: 4,
+          posY: 1,
+          posZ: 1,
+        }),
+        new Bubble({
+          msg: "What!!",
+          color: "green",
+          posX: 2,
+          posY: 5,
+          posZ: 0,
+        }),
+      ],
+    },
   },
   setup() {
     const inputText = reactive<Message>({
@@ -52,6 +69,8 @@ export default defineComponent({
     const button = reactive<Button>({
       isAdd: false,
     });
+
+    // const bubble = reactive<IBubble[]>()
 
     const container = ref(null);
 
@@ -224,6 +243,8 @@ export default defineComponent({
 <style scoped>
 .container {
   position: relative;
+  margin-top: auto;
+  margin-bottom: auto;
   margin-left: auto;
   margin-right: auto;
   width: 589px;
@@ -242,33 +263,5 @@ export default defineComponent({
   position: absolute;
   top: 90%;
   left: 30%;
-}
-
-.InputMsg {
-  box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.2);
-  background: #ffffff;
-  height: 55px;
-  z-index: 100;
-  transform: translate(-50%, -50%);
-  border-radius: 20px;
-  display: inline-flex;
-  vertical-align: middle;
-}
-.InputMsg input[type="text"] {
-  font-size: 100%;
-  border: none;
-  outline: none;
-  box-sizing: content-box;
-  background-color: transparent;
-  background-clip: padding-box;
-  font-family: Arial, Helvetica, sans-serif;
-  cursor: pointer;
-}
-.InputMsg input[type="color"] {
-  margin-left: 5%;
-  border: none;
-  background: none;
-  height: 100%;
-  cursor: pointer;
 }
 </style>
