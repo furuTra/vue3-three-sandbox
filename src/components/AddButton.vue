@@ -25,7 +25,7 @@ export default defineComponent({
       button.isAdd = props.isAdd;
     });
     const buttonClass = computed(() => {
-      return button.isAdd ? 'button add' : 'button del';
+      return button.isAdd ? "button add" : "button del";
     });
 
     const pushButton = () => {
@@ -59,6 +59,7 @@ export default defineComponent({
   position: absolute;
   top: 50%;
   left: 50%;
+  background: #808080;
   transform: translate(-50%, -50%);
   transition: all 0.25s;
   transition-timing-function: ease-in-out;
@@ -74,19 +75,7 @@ export default defineComponent({
   width: 2px;
 }
 
-.button.add:after {
-  background: #808080;
-}
-
-.button.add:before {
-  background: #808080;
-}
-
-.button.del:after {
-  transform: translate(-50%, -50%) rotate(-45deg);
-  background: #dc3545;
-}
-
+.button.del:after,
 .button.del:before {
   transform: translate(-50%, -50%) rotate(-45deg);
   background: #dc3545;
