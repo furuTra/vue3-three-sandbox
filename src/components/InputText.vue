@@ -3,25 +3,19 @@
     <div ref="container" id="canvas"></div>
     <InputMessage
       id="inputMessage"
-      v-bind:color="inputText.color"
-      v-bind:msg="inputText.msg"
+      :color="inputText.color"
+      :msg="inputText.msg"
       @input-msg="inputMsg"
       @input-color="inputColor"
     />
-    <AddButton id="button" @push-addbutton="pushButton" />
+    <AddButton id="button" :isAdd="button.isAdd" @push-addbutton="pushButton" />
   </div>
 </template>
 
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import {
-  defineComponent,
-  reactive,
-  onMounted,
-  ref,
-  PropType,
-} from "vue";
+import { defineComponent, reactive, onMounted, ref, PropType } from "vue";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
@@ -75,7 +69,7 @@ export default defineComponent({
       color: "#" + new THREE.Color("white").getHexString(),
     });
     const button = reactive<Button>({
-      isAdd: false,
+      isAdd: true,
     });
 
     // const bubble = reactive<IBubble[]>()
@@ -123,12 +117,15 @@ export default defineComponent({
     let selectBubble;
     const onPointerDown = (e) => {
       if (INTERSECTED) {
+        button.isAdd = false;
         selectBubble = bubbles.find(
           (bubble) => bubble.uuid == INTERSECTED.uuid
         );
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
+      } else {
+        button.isAdd = true;
       }
     };
 
@@ -141,7 +138,6 @@ export default defineComponent({
     };
 
     const pushButton = () => {
-      button.isAdd = !button.isAdd;
       addBubble();
     };
 
