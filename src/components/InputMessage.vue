@@ -66,6 +66,9 @@ export default defineComponent({
 
 <style scoped>
 .InputMsg {
+  position: absolute;
+  top: 90%;
+  left: 30%;
   box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.2);
   background: #ffffff;
   height: 55px;

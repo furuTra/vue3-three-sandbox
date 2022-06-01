@@ -2,13 +2,12 @@
   <div class="container">
     <div ref="container" id="canvas"></div>
     <InputMessage
-      id="inputMessage"
       :color="inputText.color"
       :msg="inputText.msg"
       @input-msg="inputMsg"
       @input-color="inputColor"
     />
-    <AddButton id="button" :isAdd="button.isAdd" @push-addbutton="pushButton" />
+    <AddButton :isAdd="button.isAdd" @push-addbutton="pushButton" />
   </div>
 </template>
 
@@ -267,15 +266,5 @@ export default defineComponent({
 #canvas {
   width: 100%;
   height: 100%;
-}
-#button {
-  position: absolute;
-  top: 90%;
-  left: 90%;
-}
-#inputMessage {
-  position: absolute;
-  top: 90%;
-  left: 30%;
 }
 </style>

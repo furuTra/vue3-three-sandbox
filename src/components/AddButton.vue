@@ -43,6 +43,9 @@ export default defineComponent({
 
 <style scoped>
 .button {
+  position: absolute;
+  top: 90%;
+  left: 90%;
   box-shadow: 0 0.2em 0.5em rgba(0, 0, 0, 0.2);
   width: 55px;
   height: 55px;
