@@ -1,24 +1,23 @@
 <template>
-  <div>
-    <p>
-      <label for="text">吹き出しのメッセージ：</label>
-      <input type="text" placeholder="edit here" v-model="inputText.msg" />
-    </p>
-    <p>
-      <label for="color">吹き出しの色：</label>
-      <input type="color" placeholder="edit here" v-model="inputText.color" />
-    </p>
-    <button @click="pushButton">ADD</button>
+  <div class="container">
+    <div ref="container" id="canvas"></div>
+    <InputMessage
+      :color="inputText.color"
+      :msg="inputText.msg"
+      @input-msg="inputMsg"
+      @input-color="inputColor"
+    />
+    <AddButton :isAdd="button.isAdd" @push-addbutton="pushButton" />
   </div>
-  <!-- <div ref="container" class="container"></div> -->
-  <div ref="container" style="width: 589px; height: 589px"></div>
 </template>
 
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, computed } from "vue";
-import { Bubble } from "../libs/Bubble";
+import { defineComponent, reactive, onMounted, ref, PropType } from "vue";
+import { Bubble, IBubble } from "../libs/Bubble";
+import InputMessage from "./InputMessage.vue";
+import AddButton from "./AddButton.vue";
 
 interface Message {
   msg: string;
@@ -32,28 +31,47 @@ interface Button {
 const hoverColor = 0xff0000;
 
 export default defineComponent({
+  name: "InputText",
+  components: {
+    InputMessage,
+    AddButton,
+  },
   props: {
-    color: {
-      type: String,
-      default: "pink",
-    },
-    msg: {
-      type: String,
-      default: "hello",
+    bubbles: {
+      type: Array as PropType<IBubble[]>,
+      default: [
+        new Bubble({
+          msg: "hello!!",
+          color: "pink",
+          rotY: Math.PI / 18,
+        }),
+        new Bubble({
+          msg: "sample!!",
+          color: "skyblue",
+          posX: 4,
+          posY: 1,
+          posZ: 1,
+        }),
+        new Bubble({
+          msg: "What!!",
+          color: "green",
+          posX: 2,
+          posY: 5,
+          posZ: 0,
+        }),
+      ],
     },
   },
-  setup(props) {
+  setup() {
     const inputText = reactive<Message>({
-      msg: props.msg,
-      color: "#" + new THREE.Color(props.color).getHexString(),
+      msg: "",
+      color: "#" + new THREE.Color("white").getHexString(),
     });
     const button = reactive<Button>({
-      isAdd: false,
+      isAdd: true,
     });
 
-    const pushButton = () => {
-      button.isAdd = !button.isAdd;
-    };
+    // const bubble = reactive<IBubble[]>()
 
     const container = ref(null);
 
@@ -98,6 +116,7 @@ export default defineComponent({
     let selectBubble;
     const onPointerDown = (e) => {
       if (INTERSECTED) {
+        button.isAdd = false;
         selectBubble = bubbles.find(
           (bubble) => bubble.uuid == INTERSECTED.uuid
         );
@@ -105,20 +124,34 @@ export default defineComponent({
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
       } else {
-        if (button.isAdd) {
-          let point = getWorldPoint();
-          let bubble = new Bubble({
-            msg: "input text",
-            color: "white",
-            posX: point.x,
-            posY: point.y,
-            posZ: point.z,
-          });
-          bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
-          bubbles.push(bubble);
-          scene.add(bubble.plane);
-        }
+        button.isAdd = true;
       }
+    };
+
+    const inputMsg = (msg) => {
+      inputText.msg = msg;
+    };
+
+    const inputColor = (color) => {
+      inputText.color = color;
+    };
+
+    const pushButton = () => {
+      addBubble();
+    };
+
+    const addBubble = () => {
+      let point = getWorldPoint();
+      let bubble = new Bubble({
+        msg: "",
+        color: "white",
+        posX: point.x,
+        posY: point.y,
+        posZ: point.z,
+      });
+      bubble.createBubble(bubble.color, bubble.msg, bubble.ctx);
+      bubbles.push(bubble);
+      scene.add(bubble.plane);
     };
 
     const getWorldPoint = () => {
@@ -134,6 +167,8 @@ export default defineComponent({
       if (container.value instanceof HTMLElement) {
         clientWidth = container.value.clientWidth;
         clientHeight = container.value.clientHeight;
+        // clientWidth = window.innerWidth;
+        // clientHeight = window.innerHeight;
 
         camera.aspect = clientWidth / clientHeight;
         camera.updateProjectionMatrix();
@@ -208,6 +243,8 @@ export default defineComponent({
 
     return {
       inputText,
+      inputMsg,
+      inputColor,
       pushButton,
       button,
       container,
@@ -218,7 +255,16 @@ export default defineComponent({
 
 <style scoped>
 .container {
-  width: 80%;
-  height: 80%;
+  position: relative;
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: auto;
+  margin-right: auto;
+  width: 589px;
+  height: 589px;
+}
+#canvas {
+  width: 100%;
+  height: 100%;
 }
 </style>
