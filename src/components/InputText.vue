@@ -2,12 +2,17 @@
   <div class="container">
     <div ref="container" id="canvas"></div>
     <InputMessage
+      class="Message"
       :color="inputText.color"
       :msg="inputText.msg"
       @input-msg="inputMsg"
       @input-color="inputColor"
     />
-    <AddButton :isAdd="button.isAdd" @push-addbutton="pushButton" />
+    <AddButton
+      class="Button"
+      :isAdd="button.isAdd"
+      @push-addbutton="pushButton"
+    />
   </div>
 </template>
 
@@ -38,8 +43,8 @@ export default defineComponent({
   },
   props: {
     bubbles: {
-      type: Array as PropType<IBubble[]>,
-      default: [
+      type: Array as PropType<Bubble[]>,
+      default: () => [
         new Bubble({
           msg: "hello!!",
           color: "pink",
@@ -62,7 +67,7 @@ export default defineComponent({
       ],
     },
   },
-  setup() {
+  setup(props) {
     const inputText = reactive<Message>({
       msg: "",
       color: "#" + new THREE.Color("white").getHexString(),
@@ -70,8 +75,8 @@ export default defineComponent({
     const button = reactive<Button>({
       isAdd: true,
     });
-
-    // const bubble = reactive<IBubble[]>()
+    // HACK: reactiveなオブジェクトとして吹き出しを作成すると、ArrayではなくProxyとなってしまい、sceneに追加できない
+    let bubbles = props.bubbles;
 
     const container = ref(null);
 
@@ -81,28 +86,6 @@ export default defineComponent({
     const controls = new OrbitControls(camera, renderer.domElement);
     const axes = new THREE.AxesHelper(10);
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-
-    let bubbles = [
-      new Bubble({
-        msg: "hello!!",
-        color: "pink",
-        rotY: Math.PI / 18,
-      }),
-      new Bubble({
-        msg: "sample!!",
-        color: "skyblue",
-        posX: 4,
-        posY: 1,
-        posZ: 1,
-      }),
-      new Bubble({
-        msg: "What!!",
-        color: "green",
-        posX: 2,
-        posY: 5,
-        posZ: 0,
-      }),
-    ];
 
     let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
@@ -137,7 +120,7 @@ export default defineComponent({
     };
 
     const pushButton = () => {
-      addBubble();
+      button.isAdd ? addBubble() : removeBubble();
     };
 
     const addBubble = () => {
@@ -154,6 +137,11 @@ export default defineComponent({
       scene.add(bubble.plane);
     };
 
+    const removeBubble = () => {
+      bubbles.splice(bubbles.indexOf(selectBubble), 1);
+      scene.remove(selectBubble.plane);
+    };
+
     const getWorldPoint = () => {
       let worldPoint = new THREE.Vector3();
       worldPoint.x = mouse.x - 1;
@@ -165,6 +153,7 @@ export default defineComponent({
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
+        // TODO: 画面サイズに合わせて表示できるようにしたい
         clientWidth = container.value.clientWidth;
         clientHeight = container.value.clientHeight;
         // clientWidth = window.innerWidth;
@@ -266,5 +255,13 @@ export default defineComponent({
 #canvas {
   width: 100%;
   height: 100%;
+}
+.Message {
+  top: 90%;
+  left: 30%;
+}
+.Button {
+  top: 90%;
+  left: 90%;
 }
 </style>
