@@ -120,7 +120,7 @@ export default defineComponent({
     };
 
     const pushButton = () => {
-      addBubble();
+      button.isAdd ? addBubble() : removeBubble();
     };
 
     const addBubble = () => {
@@ -137,6 +137,11 @@ export default defineComponent({
       scene.add(bubble.plane);
     };
 
+    const removeBubble = () => {
+      bubbles.splice(bubbles.indexOf(selectBubble), 1);
+      scene.remove(selectBubble.plane);
+    };
+
     const getWorldPoint = () => {
       let worldPoint = new THREE.Vector3();
       worldPoint.x = mouse.x - 1;
@@ -148,6 +153,7 @@ export default defineComponent({
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
+        // TODO: 画面サイズに合わせて表示できるようにしたい
         clientWidth = container.value.clientWidth;
         clientHeight = container.value.clientHeight;
         // clientWidth = window.innerWidth;
