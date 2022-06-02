@@ -43,8 +43,8 @@ export default defineComponent({
   },
   props: {
     bubbles: {
-      type: Array as PropType<IBubble[]>,
-      default: [
+      type: Array as PropType<Bubble[]>,
+      default: () => [
         new Bubble({
           msg: "hello!!",
           color: "pink",
@@ -67,7 +67,7 @@ export default defineComponent({
       ],
     },
   },
-  setup() {
+  setup(props) {
     const inputText = reactive<Message>({
       msg: "",
       color: "#" + new THREE.Color("white").getHexString(),
@@ -75,8 +75,8 @@ export default defineComponent({
     const button = reactive<Button>({
       isAdd: true,
     });
-
-    // const bubble = reactive<IBubble[]>()
+    // HACK: reactiveなオブジェクトとして吹き出しを作成すると、ArrayではなくProxyとなってしまい、sceneに追加できない
+    let bubbles = props.bubbles;
 
     const container = ref(null);
 
@@ -86,28 +86,6 @@ export default defineComponent({
     const controls = new OrbitControls(camera, renderer.domElement);
     const axes = new THREE.AxesHelper(10);
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-
-    let bubbles = [
-      new Bubble({
-        msg: "hello!!",
-        color: "pink",
-        rotY: Math.PI / 18,
-      }),
-      new Bubble({
-        msg: "sample!!",
-        color: "skyblue",
-        posX: 4,
-        posY: 1,
-        posZ: 1,
-      }),
-      new Bubble({
-        msg: "What!!",
-        color: "green",
-        posX: 2,
-        posY: 5,
-        posZ: 0,
-      }),
-    ];
 
     let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
