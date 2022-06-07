@@ -27,6 +27,7 @@ import {
   PropType,
   render,
 } from "vue";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
@@ -60,14 +61,14 @@ export default defineComponent({
         new Bubble({
           msg: "sample!!",
           color: "skyblue",
-          posX: 4,
-          posY: 1,
-          posZ: 1,
+          posX: 5,
+          posY: 0,
+          posZ: 2,
         }),
         new Bubble({
           msg: "What!!",
           color: "green",
-          posX: 2,
+          posX: 5,
           posY: 5,
           posZ: 0,
         }),
@@ -91,6 +92,7 @@ export default defineComponent({
     const camera = new THREE.PerspectiveCamera();
     const renderer = new THREE.WebGLRenderer();
     const controls = new OrbitControls(camera, renderer.domElement);
+    const tfcontrols = new TransformControls(camera, renderer.domElement);
     const axes = new THREE.AxesHelper(10);
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 
@@ -104,7 +106,7 @@ export default defineComponent({
     };
 
     let selectBubble;
-    const onPointerDown = (e) => {
+    const onPointerDown = () => {
       if (INTERSECTED) {
         button.isAdd = false;
         selectBubble = bubbles.find(
@@ -113,16 +115,25 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
+        addTFControls(selectBubble.plane);
       } else {
         button.isAdd = true;
+        tfcontrols.detach();
       }
     };
 
-    const inputMsg = (msg) => {
+    const addTFControls = (mesh: THREE.Object3D) => {
+      if (mesh !== tfcontrols.object) {
+        tfcontrols.attach(mesh);
+      }
+      scene.add(tfcontrols);
+    };
+
+    const inputMsg = (msg: string) => {
       inputText.msg = msg;
     };
 
-    const inputColor = (color) => {
+    const inputColor = (color: string) => {
       inputText.color = color;
     };
 
@@ -181,6 +192,15 @@ export default defineComponent({
           scene.add(bubble.plane);
         });
 
+        controls.update();
+        controls.addEventListener("change", render);
+
+        tfcontrols.addEventListener("change", render);
+        // NOTE: オブジェクト操作時にOrbitControls操作が起動しないように設定
+        tfcontrols.addEventListener("dragging-changed", (e) => {
+          controls.enabled = !e.value;
+        });
+
         renderer.setClearColor(new THREE.Color(0xeeeeee));
         renderer.setSize(clientWidth, clientWidth);
         renderer.setPixelRatio(clientWidth / clientHeight);
@@ -192,13 +212,18 @@ export default defineComponent({
       }
     };
 
+    const isBubble = (object: THREE.Object3D) => {
+      // NOTE: TransformControlsで表示されるオブジェクトもMeshなため、nameも判定条件に含める
+      return object.type == "Mesh" && object.name == "bubble";
+    };
+
     let INTERSECTED;
     const objectEmissive = () => {
       // mousehover位置にあるオブジェクトを取得
       raycaster.setFromCamera(mouse, camera);
       let objs = raycaster.intersectObjects(scene.children);
-      // mouseoverしたオブジェクトがMeshであれば、赤く表示する
-      if (objs.length > 0 && objs[0].object.type == "Mesh") {
+      // mouseoverしたオブジェクトが吹き出しであれば、赤く表示する
+      if (objs.length > 0 && isBubble(objs[0].object)) {
         if (INTERSECTED != objs[0].object) {
           if (INTERSECTED)
             INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
@@ -230,7 +255,6 @@ export default defineComponent({
           selectBubble.plane.material.map.needsUpdate = true;
         }
 
-        controls.update();
         render();
         requestAnimationFrame(frame);
         objectEmissive();

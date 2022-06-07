@@ -76,6 +76,8 @@ export class Bubble implements IBubble {
         flatShading: true,
         side: THREE.DoubleSide,
       });
-      return new THREE.Mesh(planeGeometry, planeMaterial);
+      let planeMesh = new THREE.Mesh(planeGeometry, planeMaterial);
+      planeMesh.name = "bubble";
+      return planeMesh;
     }
   }
