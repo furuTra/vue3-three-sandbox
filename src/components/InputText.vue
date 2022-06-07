@@ -147,6 +147,7 @@ export default defineComponent({
     const removeBubble = () => {
       bubbles.splice(bubbles.indexOf(selectBubble), 1);
       scene.remove(selectBubble.plane);
+      button.isAdd = true;
     };
 
     const getWorldPoint = () => {
