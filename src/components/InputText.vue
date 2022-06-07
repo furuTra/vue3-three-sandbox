@@ -19,7 +19,14 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { defineComponent, reactive, onMounted, ref, PropType } from "vue";
+import {
+  defineComponent,
+  reactive,
+  onMounted,
+  ref,
+  PropType,
+  render,
+} from "vue";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
@@ -43,7 +50,7 @@ export default defineComponent({
   },
   props: {
     bubbles: {
-      type: Array as PropType<Bubble[]>,
+      type: Array as PropType<IBubble[]>,
       default: () => [
         new Bubble({
           msg: "hello!!",
@@ -89,7 +96,7 @@ export default defineComponent({
 
     let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    const mouse = new THREE.Vector3(0, 0, 0);
     const onPointerMove = (e) => {
       // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
       mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
@@ -160,9 +167,10 @@ export default defineComponent({
         // clientHeight = window.innerHeight;
 
         camera.aspect = clientWidth / clientHeight;
+        camera.fov = 90;
+        camera.near = 3;
         camera.updateProjectionMatrix();
         camera.position.set(0, 10, 10);
-        camera.lookAt(0, 0, 0);
 
         scene.add(ambientLight);
         scene.add(axes);
@@ -184,7 +192,10 @@ export default defineComponent({
     };
 
     let INTERSECTED;
-    const objectEmissive = (objs) => {
+    const objectEmissive = () => {
+      // mousehover位置にあるオブジェクトを取得
+      raycaster.setFromCamera(mouse, camera);
+      let objs = raycaster.intersectObjects(scene.children);
       // mouseoverしたオブジェクトがMeshであれば、赤く表示する
       if (objs.length > 0 && objs[0].object.type == "Mesh") {
         if (INTERSECTED != objs[0].object) {
@@ -201,6 +212,10 @@ export default defineComponent({
       }
     };
 
+    const render = () => {
+      renderer.render(scene, camera);
+    };
+
     const animate = () => {
       const frame = () => {
         if (selectBubble) {
@@ -215,12 +230,9 @@ export default defineComponent({
         }
 
         controls.update();
-        renderer.render(scene, camera);
-        raycaster.setFromCamera(mouse, camera);
-        // mousehover位置にあるオブジェクトを取得
-        let objs = raycaster.intersectObjects(scene.children);
+        render();
         requestAnimationFrame(frame);
-        objectEmissive(objs);
+        objectEmissive();
       };
       frame();
     };
