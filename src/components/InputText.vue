@@ -9,9 +9,19 @@
       @input-color="inputColor"
     />
     <AddButton
-      class="Button"
+      class="AddButton"
       :isAdd="button.isAdd"
-      @push-addbutton="pushButton"
+      @push-addbutton="pushAddButton"
+    />
+    <RotateButton
+      class="RotateButton"
+      :isRotate="button.isRotate"
+      @push-rotatebutton="pushRotateButton"
+    />
+    <MoveButton
+      class="MoveButton"
+      :isMove="button.isMove"
+      @push-movebutton="pushMoveButton"
     />
   </div>
 </template>
@@ -25,12 +35,13 @@ import {
   onMounted,
   ref,
   PropType,
-  render,
 } from "vue";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
+import RotateButton from "./RotateButton.vue";
+import MoveButton from "./MoveButton.vue";
 
 interface Message {
   msg: string;
@@ -39,6 +50,8 @@ interface Message {
 
 interface Button {
   isAdd: boolean;
+  isMove: boolean;
+  isRotate: boolean;
 }
 
 const hoverColor = 0xff0000;
@@ -48,6 +61,8 @@ export default defineComponent({
   components: {
     InputMessage,
     AddButton,
+    RotateButton,
+    MoveButton,
   },
   props: {
     bubbles: {
@@ -82,6 +97,8 @@ export default defineComponent({
     });
     const button = reactive<Button>({
       isAdd: true,
+      isMove: false,
+      isRotate: false,
     });
     // HACK: reactiveなオブジェクトとして吹き出しを作成すると、ArrayではなくProxyとなってしまい、sceneに追加できない
     let bubbles = props.bubbles;
@@ -115,18 +132,9 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
-        addTFControls(selectBubble.plane);
       } else {
         button.isAdd = true;
-        tfcontrols.detach();
       }
-    };
-
-    const addTFControls = (mesh: THREE.Object3D) => {
-      if (mesh !== tfcontrols.object) {
-        tfcontrols.attach(mesh);
-      }
-      scene.add(tfcontrols);
     };
 
     const inputMsg = (msg: string) => {
@@ -137,8 +145,40 @@ export default defineComponent({
       inputText.color = color;
     };
 
-    const pushButton = () => {
+    const pushAddButton = () => {
       button.isAdd ? addBubble() : removeBubble();
+    };
+
+    const addTFControls = (mesh: THREE.Object3D) => {
+      if (mesh !== tfcontrols.object) {
+        tfcontrols.attach(mesh);
+      }
+    };
+
+    const pushMoveButton = () => {
+      button.isMove = !button.isMove;
+      button.isRotate = false;
+      if (button.isMove) {
+        tfcontrols.setMode("translate");
+        if (selectBubble) {
+          addTFControls(selectBubble.plane);
+        }
+      } else {
+        tfcontrols.detach();
+      }
+    };
+
+    const pushRotateButton = () => {
+      button.isRotate = !button.isRotate;
+      button.isMove = false;
+      if (button.isRotate) {
+        tfcontrols.setMode("rotate");
+        if (selectBubble) {
+          addTFControls(selectBubble.plane);
+        }
+      } else {
+        tfcontrols.detach();
+      }
     };
 
     const addBubble = () => {
@@ -157,6 +197,7 @@ export default defineComponent({
 
     const removeBubble = () => {
       bubbles.splice(bubbles.indexOf(selectBubble), 1);
+      tfcontrols.detach();
       scene.remove(selectBubble.plane);
       button.isAdd = true;
     };
@@ -200,6 +241,7 @@ export default defineComponent({
         tfcontrols.addEventListener("dragging-changed", (e) => {
           controls.enabled = !e.value;
         });
+        scene.add(tfcontrols);
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
         renderer.setSize(clientWidth, clientWidth);
@@ -271,7 +313,9 @@ export default defineComponent({
       inputText,
       inputMsg,
       inputColor,
-      pushButton,
+      pushAddButton,
+      pushMoveButton,
+      pushRotateButton,
       button,
       container,
     };
@@ -297,8 +341,16 @@ export default defineComponent({
   top: 90%;
   left: 30%;
 }
-.Button {
+.AddButton {
   top: 90%;
+  left: 90%;
+}
+.RotateButton {
+  top: 75%;
+  left: 90%;
+}
+.MoveButton {
+  top: 60%;
   left: 90%;
 }
 </style>
