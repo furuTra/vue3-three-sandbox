@@ -160,6 +160,8 @@ export default defineComponent({
       button.isRotate = false;
       if (button.isMove) {
         tfcontrols.setMode("translate");
+        tfcontrols.showX = true;
+        tfcontrols.showZ = true;
         if (selectBubble) {
           addTFControls(selectBubble.plane);
         }
@@ -173,6 +175,8 @@ export default defineComponent({
       button.isMove = false;
       if (button.isRotate) {
         tfcontrols.setMode("rotate");
+        tfcontrols.showX = false;
+        tfcontrols.showZ = false;
         if (selectBubble) {
           addTFControls(selectBubble.plane);
         }
