@@ -217,15 +217,12 @@ export default defineComponent({
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
-        // TODO: 画面サイズに合わせて表示できるようにしたい
-        clientWidth = container.value.clientWidth;
-        clientHeight = container.value.clientHeight;
-        // clientWidth = window.innerWidth;
-        // clientHeight = window.innerHeight;
+        clientWidth = window.innerWidth;
+        clientHeight = window.innerHeight;
+        const aspect = clientWidth / clientHeight;
 
-        camera.aspect = clientWidth / clientHeight;
-        camera.fov = 90;
-        camera.near = 3;
+        camera.aspect = aspect;
+        camera.near = 5;
         camera.updateProjectionMatrix();
         camera.position.set(0, 10, 10);
 
@@ -248,8 +245,8 @@ export default defineComponent({
         scene.add(tfcontrols);
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
-        renderer.setSize(clientWidth, clientWidth);
-        renderer.setPixelRatio(clientWidth / clientHeight);
+        renderer.setSize(clientWidth, clientHeight);
+        renderer.setPixelRatio(aspect);
         renderer.shadowMap.enabled = true;
 
         container.value.appendChild(renderer.domElement);
@@ -334,8 +331,8 @@ export default defineComponent({
   margin-bottom: auto;
   margin-left: auto;
   margin-right: auto;
-  width: 589px;
-  height: 589px;
+  width: 100vw;
+  height: 100vh;
 }
 #canvas {
   width: 100%;
@@ -343,7 +340,7 @@ export default defineComponent({
 }
 .Message {
   top: 90%;
-  left: 30%;
+  left: 20%;
 }
 .AddButton {
   top: 90%;
