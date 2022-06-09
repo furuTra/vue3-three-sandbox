@@ -135,6 +135,7 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
+        if (button.isMove || button.isRotate) addTFControls(selectBubble.plane);
       } else {
         button.isAdd = true;
       }
