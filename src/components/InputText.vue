@@ -29,13 +29,7 @@
 <script lang="ts">
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import {
-  defineComponent,
-  reactive,
-  onMounted,
-  ref,
-  PropType,
-} from "vue";
+import { defineComponent, reactive, onMounted, ref, PropType } from "vue";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
@@ -52,6 +46,11 @@ interface Button {
   isAdd: boolean;
   isMove: boolean;
   isRotate: boolean;
+}
+
+interface ClientLength {
+  width: number;
+  height: number;
 }
 
 const hoverColor = 0xff0000;
@@ -100,6 +99,10 @@ export default defineComponent({
       isMove: false,
       isRotate: false,
     });
+    const clientLength = reactive<ClientLength>({
+      width: 0,
+      height: 0,
+    });
     // HACK: reactiveなオブジェクトとして吹き出しを作成すると、ArrayではなくProxyとなってしまい、sceneに追加できない
     let bubbles = props.bubbles;
 
@@ -113,13 +116,13 @@ export default defineComponent({
     const axes = new THREE.AxesHelper(10);
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 
-    let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector3(0, 0, 0);
     const onPointerMove = (e) => {
       // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
-      mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
-      mouse.y = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
+      mouse.x = ((e.offsetX - clientLength.width / 2) / clientLength.width) * 2;
+      mouse.y =
+        ((-e.offsetY + clientLength.height / 2) / clientLength.height) * 2;
     };
 
     let selectBubble;
@@ -217,9 +220,9 @@ export default defineComponent({
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
-        clientWidth = window.innerWidth;
-        clientHeight = window.innerHeight;
-        const aspect = clientWidth / clientHeight;
+        clientLength.width = window.innerWidth;
+        clientLength.height = window.innerHeight;
+        const aspect = clientLength.width / clientLength.height;
 
         camera.aspect = aspect;
         camera.near = 5;
@@ -245,7 +248,7 @@ export default defineComponent({
         scene.add(tfcontrols);
 
         renderer.setClearColor(new THREE.Color(0xeeeeee));
-        renderer.setSize(clientWidth, clientHeight);
+        renderer.setSize(clientLength.width, clientLength.height);
         renderer.setPixelRatio(aspect);
         renderer.shadowMap.enabled = true;
 
