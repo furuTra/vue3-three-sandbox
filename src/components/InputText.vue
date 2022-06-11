@@ -9,9 +9,19 @@
       @input-color="inputColor"
     />
     <AddButton
-      class="Button"
+      class="AddButton"
       :isAdd="button.isAdd"
-      @push-addbutton="pushButton"
+      @push-addbutton="pushAddButton"
+    />
+    <RotateButton
+      class="RotateButton"
+      :isRotate="button.isRotate"
+      @push-rotatebutton="pushRotateButton"
+    />
+    <MoveButton
+      class="MoveButton"
+      :isMove="button.isMove"
+      @push-movebutton="pushMoveButton"
     />
   </div>
 </template>
@@ -20,9 +30,12 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { defineComponent, reactive, onMounted, ref, PropType } from "vue";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import { Bubble, IBubble } from "../libs/Bubble";
 import InputMessage from "./InputMessage.vue";
 import AddButton from "./AddButton.vue";
+import RotateButton from "./RotateButton.vue";
+import MoveButton from "./MoveButton.vue";
 
 interface Message {
   msg: string;
@@ -31,6 +44,13 @@ interface Message {
 
 interface Button {
   isAdd: boolean;
+  isMove: boolean;
+  isRotate: boolean;
+}
+
+interface ClientLength {
+  width: number;
+  height: number;
 }
 
 const hoverColor = 0xff0000;
@@ -40,10 +60,12 @@ export default defineComponent({
   components: {
     InputMessage,
     AddButton,
+    RotateButton,
+    MoveButton,
   },
   props: {
     bubbles: {
-      type: Array as PropType<Bubble[]>,
+      type: Array as PropType<IBubble[]>,
       default: () => [
         new Bubble({
           msg: "hello!!",
@@ -53,14 +75,14 @@ export default defineComponent({
         new Bubble({
           msg: "sample!!",
           color: "skyblue",
-          posX: 4,
-          posY: 1,
-          posZ: 1,
+          posX: 5,
+          posY: 0,
+          posZ: 2,
         }),
         new Bubble({
           msg: "What!!",
           color: "green",
-          posX: 2,
+          posX: 5,
           posY: 5,
           posZ: 0,
         }),
@@ -74,6 +96,12 @@ export default defineComponent({
     });
     const button = reactive<Button>({
       isAdd: true,
+      isMove: false,
+      isRotate: false,
+    });
+    const clientLength = reactive<ClientLength>({
+      width: 0,
+      height: 0,
     });
     // HACK: reactiveなオブジェクトとして吹き出しを作成すると、ArrayではなくProxyとなってしまい、sceneに追加できない
     let bubbles = props.bubbles;
@@ -84,20 +112,21 @@ export default defineComponent({
     const camera = new THREE.PerspectiveCamera();
     const renderer = new THREE.WebGLRenderer();
     const controls = new OrbitControls(camera, renderer.domElement);
+    const tfcontrols = new TransformControls(camera, renderer.domElement);
     const axes = new THREE.AxesHelper(10);
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 
-    let clientWidth, clientHeight;
     const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    const mouse = new THREE.Vector3(0, 0, 0);
     const onPointerMove = (e) => {
       // canvasの縦横長から、canvas内のマウスxy座標を-1~1の範囲で算出
-      mouse.x = ((e.offsetX - clientWidth / 2) / clientWidth) * 2;
-      mouse.y = ((-e.offsetY + clientHeight / 2) / clientHeight) * 2;
+      mouse.x = ((e.offsetX - clientLength.width / 2) / clientLength.width) * 2;
+      mouse.y =
+        ((-e.offsetY + clientLength.height / 2) / clientLength.height) * 2;
     };
 
     let selectBubble;
-    const onPointerDown = (e) => {
+    const onPointerDown = () => {
       if (INTERSECTED) {
         button.isAdd = false;
         selectBubble = bubbles.find(
@@ -106,21 +135,58 @@ export default defineComponent({
         inputText.msg = selectBubble.msg;
         inputText.color =
           "#" + new THREE.Color(selectBubble.color).getHexString();
+        if (button.isMove || button.isRotate) addTFControls(selectBubble.plane);
       } else {
         button.isAdd = true;
       }
     };
 
-    const inputMsg = (msg) => {
+    const inputMsg = (msg: string) => {
       inputText.msg = msg;
     };
 
-    const inputColor = (color) => {
+    const inputColor = (color: string) => {
       inputText.color = color;
     };
 
-    const pushButton = () => {
+    const pushAddButton = () => {
       button.isAdd ? addBubble() : removeBubble();
+    };
+
+    const addTFControls = (mesh: THREE.Object3D) => {
+      if (mesh !== tfcontrols.object) {
+        tfcontrols.attach(mesh);
+      }
+    };
+
+    const pushMoveButton = () => {
+      button.isMove = !button.isMove;
+      button.isRotate = false;
+      if (button.isMove) {
+        tfcontrols.setMode("translate");
+        tfcontrols.showX = true;
+        tfcontrols.showZ = true;
+        if (selectBubble) {
+          addTFControls(selectBubble.plane);
+        }
+      } else {
+        tfcontrols.detach();
+      }
+    };
+
+    const pushRotateButton = () => {
+      button.isRotate = !button.isRotate;
+      button.isMove = false;
+      if (button.isRotate) {
+        tfcontrols.setMode("rotate");
+        tfcontrols.showX = false;
+        tfcontrols.showZ = false;
+        if (selectBubble) {
+          addTFControls(selectBubble.plane);
+        }
+      } else {
+        tfcontrols.detach();
+      }
     };
 
     const addBubble = () => {
@@ -139,7 +205,9 @@ export default defineComponent({
 
     const removeBubble = () => {
       bubbles.splice(bubbles.indexOf(selectBubble), 1);
+      tfcontrols.detach();
       scene.remove(selectBubble.plane);
+      button.isAdd = true;
     };
 
     const getWorldPoint = () => {
@@ -153,16 +221,14 @@ export default defineComponent({
 
     const init = () => {
       if (container.value instanceof HTMLElement) {
-        // TODO: 画面サイズに合わせて表示できるようにしたい
-        clientWidth = container.value.clientWidth;
-        clientHeight = container.value.clientHeight;
-        // clientWidth = window.innerWidth;
-        // clientHeight = window.innerHeight;
+        clientLength.width = window.innerWidth;
+        clientLength.height = window.innerHeight;
+        const aspect = clientLength.width / clientLength.height;
 
-        camera.aspect = clientWidth / clientHeight;
+        camera.aspect = aspect;
+        camera.near = 5;
         camera.updateProjectionMatrix();
         camera.position.set(0, 10, 10);
-        camera.lookAt(0, 0, 0);
 
         scene.add(ambientLight);
         scene.add(axes);
@@ -172,9 +238,19 @@ export default defineComponent({
           scene.add(bubble.plane);
         });
 
+        controls.update();
+        controls.addEventListener("change", render);
+
+        tfcontrols.addEventListener("change", render);
+        // NOTE: オブジェクト操作時にOrbitControls操作が起動しないように設定
+        tfcontrols.addEventListener("dragging-changed", (e) => {
+          controls.enabled = !e.value;
+        });
+        scene.add(tfcontrols);
+
         renderer.setClearColor(new THREE.Color(0xeeeeee));
-        renderer.setSize(clientWidth, clientWidth);
-        renderer.setPixelRatio(clientWidth / clientHeight);
+        renderer.setSize(clientLength.width, clientLength.height);
+        renderer.setPixelRatio(aspect);
         renderer.shadowMap.enabled = true;
 
         container.value.appendChild(renderer.domElement);
@@ -183,10 +259,18 @@ export default defineComponent({
       }
     };
 
+    const isBubble = (object: THREE.Object3D) => {
+      // NOTE: TransformControlsで表示されるオブジェクトもMeshなため、nameも判定条件に含める
+      return object.type == "Mesh" && object.name == "bubble";
+    };
+
     let INTERSECTED;
-    const objectEmissive = (objs) => {
-      // mouseoverしたオブジェクトがMeshであれば、赤く表示する
-      if (objs.length > 0 && objs[0].object.type == "Mesh") {
+    const objectEmissive = () => {
+      // mousehover位置にあるオブジェクトを取得
+      raycaster.setFromCamera(mouse, camera);
+      let objs = raycaster.intersectObjects(scene.children);
+      // mouseoverしたオブジェクトが吹き出しであれば、赤く表示する
+      if (objs.length > 0 && isBubble(objs[0].object)) {
         if (INTERSECTED != objs[0].object) {
           if (INTERSECTED)
             INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
@@ -199,6 +283,10 @@ export default defineComponent({
           INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
         INTERSECTED = null;
       }
+    };
+
+    const render = () => {
+      renderer.render(scene, camera);
     };
 
     const animate = () => {
@@ -214,13 +302,9 @@ export default defineComponent({
           selectBubble.plane.material.map.needsUpdate = true;
         }
 
-        controls.update();
-        renderer.render(scene, camera);
-        raycaster.setFromCamera(mouse, camera);
-        // mousehover位置にあるオブジェクトを取得
-        let objs = raycaster.intersectObjects(scene.children);
+        render();
         requestAnimationFrame(frame);
-        objectEmissive(objs);
+        objectEmissive();
       };
       frame();
     };
@@ -234,7 +318,9 @@ export default defineComponent({
       inputText,
       inputMsg,
       inputColor,
-      pushButton,
+      pushAddButton,
+      pushMoveButton,
+      pushRotateButton,
       button,
       container,
     };
@@ -249,8 +335,8 @@ export default defineComponent({
   margin-bottom: auto;
   margin-left: auto;
   margin-right: auto;
-  width: 589px;
-  height: 589px;
+  width: 100vw;
+  height: 100vh;
 }
 #canvas {
   width: 100%;
@@ -258,10 +344,18 @@ export default defineComponent({
 }
 .Message {
   top: 90%;
-  left: 30%;
+  left: 20%;
 }
-.Button {
+.AddButton {
   top: 90%;
+  left: 90%;
+}
+.RotateButton {
+  top: 75%;
+  left: 90%;
+}
+.MoveButton {
+  top: 60%;
   left: 90%;
 }
 </style>
